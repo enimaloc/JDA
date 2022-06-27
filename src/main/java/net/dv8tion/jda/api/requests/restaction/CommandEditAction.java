@@ -83,6 +83,10 @@ public interface CommandEditAction extends RestAction<Command>
         return setUserPermissionRequired(Permission.getRaw(permissions));
     }
 
+    @Nonnull
+    @CheckReturnValue
+    CommandEditAction setGuildOnly(boolean guildOnly);
+
     /**
      * Configure the name
      *

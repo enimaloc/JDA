@@ -47,6 +47,7 @@ public class CommandEditActionImpl extends RestActionImpl<Command> implements Co
     private static final int DESCRIPTION_SET = 1 << 1;
     private static final int OPTIONS_SET = 1 << 2;
     private static final int PERMISSIONS_SET = 1 << 3;
+    private static final int GLOBAL_SET = 1 << 4;
 
     private final Guild guild;
     private int mask = 0;
@@ -83,7 +84,7 @@ public class CommandEditActionImpl extends RestActionImpl<Command> implements Co
     public CommandEditAction apply(@Nonnull CommandData commandData)
     {
         Checks.notNull(commandData, "Command Data");
-        this.mask = NAME_SET | DESCRIPTION_SET | OPTIONS_SET | PERMISSIONS_SET;
+        this.mask = NAME_SET | DESCRIPTION_SET | OPTIONS_SET | PERMISSIONS_SET | GLOBAL_SET;
         this.data = (CommandDataImpl) commandData;
         return this;
     }
@@ -94,6 +95,15 @@ public class CommandEditActionImpl extends RestActionImpl<Command> implements Co
     {
         data.setUserPermissionRequired(rawPermissions);
         mask |= PERMISSIONS_SET;
+        return this;
+    }
+
+    @NotNull
+    @Override
+    public CommandEditAction setGuildOnly(boolean guildOnly)
+    {
+        data.setGuildOnly(guildOnly);
+        mask |= GLOBAL_SET;
         return this;
     }
 
@@ -192,6 +202,8 @@ public class CommandEditActionImpl extends RestActionImpl<Command> implements Co
             json.remove("options");
         if (isUnchanged(PERMISSIONS_SET))
             json.remove("default_member_permissions");
+        if (isUnchanged(GLOBAL_SET))
+            json.remove("dm_permission");
         mask = 0;
         data = new CommandDataImpl(UNDEFINED, UNDEFINED);
         return getRequestBody(json);

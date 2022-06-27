@@ -86,6 +86,20 @@ public class CommandCreateActionImpl extends RestActionImpl<Command> implements 
         return this;
     }
 
+    @NotNull
+    @Override
+    public CommandCreateAction setGuildOnly(boolean guildOnly)
+    {
+        data.setGuildOnly(guildOnly);
+        return this;
+    }
+
+    @Override
+    public boolean isGuildOnly()
+    {
+        return data.isGuildOnly();
+    }
+
     @Nonnull
     @Override
     public String getName()

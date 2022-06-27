@@ -26,6 +26,7 @@ import net.dv8tion.jda.api.interactions.commands.build.SubcommandGroupData;
 import net.dv8tion.jda.api.utils.data.DataArray;
 import net.dv8tion.jda.api.utils.data.DataObject;
 import net.dv8tion.jda.internal.utils.Checks;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.util.Arrays;
@@ -33,13 +34,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.jetbrains.annotations.NotNull;
-
 public class CommandDataImpl implements SlashCommandData
 {
     protected final DataArray options = DataArray.empty();
     protected String name, description = "";
     protected long permissions = Permission.ALL_PERMISSIONS;
+    protected boolean guildOnly = false;
 
     private boolean allowSubcommands = true;
     private boolean allowGroups = true;
@@ -79,7 +79,8 @@ public class CommandDataImpl implements SlashCommandData
                 .put("name", name)
                 .put("options", options);
         if (type == Command.Type.SLASH)
-            json.put("description", description);
+            json.put("description", description)
+                    .put("dm_permission", guildOnly);
         return json;
     }
 
@@ -132,6 +133,20 @@ public class CommandDataImpl implements SlashCommandData
         return permissions;
     }
 
+    @NotNull
+    @Override
+    public CommandDataImpl setGuildOnly(boolean guildOnly)
+    {
+        this.guildOnly = guildOnly;
+        return this;
+    }
+
+    @Override
+    public boolean isGuildOnly()
+    {
+        return guildOnly;
+    }
+
     @Nonnull
     @Override
     public CommandDataImpl addOptions(@Nonnull OptionData... options)
@@ -152,9 +167,9 @@ public class CommandDataImpl implements SlashCommandData
         }
 
         Checks.checkUnique(
-            Stream.concat(getOptions().stream(), Arrays.stream(options)).map(OptionData::getName),
-            "Cannot have multiple options with the same name. Name: \"%s\" appeared %d times!",
-            (count, value) -> new Object[]{ value, count }
+                Stream.concat(getOptions().stream(), Arrays.stream(options)).map(OptionData::getName),
+                "Cannot have multiple options with the same name. Name: \"%s\" appeared %d times!",
+                (count, value) -> new Object[]{value, count}
         );
 
         allowSubcommands = allowGroups = false;
@@ -176,9 +191,9 @@ public class CommandDataImpl implements SlashCommandData
             throw new IllegalArgumentException("You cannot mix options with subcommands/groups.");
         Checks.check(subcommands.length + options.length() <= 25, "Cannot have more than 25 subcommands for a command!");
         Checks.checkUnique(
-            Stream.concat(getSubcommands().stream(), Arrays.stream(subcommands)).map(SubcommandData::getName),
-            "Cannot have multiple subcommands with the same name. Name: \"%s\" appeared %d times!",
-            (count, value) -> new Object[]{ value, count }
+                Stream.concat(getSubcommands().stream(), Arrays.stream(subcommands)).map(SubcommandData::getName),
+                "Cannot have multiple subcommands with the same name. Name: \"%s\" appeared %d times!",
+                (count, value) -> new Object[]{value, count}
         );
 
         allowOption = false;
@@ -199,9 +214,9 @@ public class CommandDataImpl implements SlashCommandData
             throw new IllegalArgumentException("You cannot mix options with subcommands/groups.");
         Checks.check(groups.length + options.length() <= 25, "Cannot have more than 25 subcommand groups for a command!");
         Checks.checkUnique(
-            Stream.concat(getSubcommandGroups().stream(), Arrays.stream(groups)).map(SubcommandGroupData::getName),
-            "Cannot have multiple subcommand groups with the same name. Name: \"%s\" appeared %d times!",
-            (count, value) -> new Object[]{ value, count }
+                Stream.concat(getSubcommandGroups().stream(), Arrays.stream(groups)).map(SubcommandGroupData::getName),
+                "Cannot have multiple subcommand groups with the same name. Name: \"%s\" appeared %d times!",
+                (count, value) -> new Object[]{value, count}
         );
 
         allowOption = false;

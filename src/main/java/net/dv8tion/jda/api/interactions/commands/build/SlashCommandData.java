@@ -50,6 +50,11 @@ public interface SlashCommandData extends CommandData
         return setUserPermissionRequired(Permission.getRaw(permissions));
     }
 
+    @Nonnull
+    SlashCommandData setGuildOnly(boolean guildOnly);
+
+    boolean isGuildOnly();
+
     /**
      * Configure the description
      *
@@ -340,8 +345,9 @@ public interface SlashCommandData extends CommandData
         if (command.getType() != Command.Type.SLASH)
             throw new IllegalArgumentException("Cannot convert command of type " + command.getType() + " to SlashCommandData!");
 
-        CommandDataImpl data = new CommandDataImpl(command.getName(), command.getDescription());
-        data.setUserPermissionRequired(command.getUserPermissionRequiredRaw());
+        CommandDataImpl data = (CommandDataImpl) new CommandDataImpl(command.getName(), command.getDescription())
+                .setUserPermissionRequired(command.getUserPermissionRequiredRaw())
+                .setGuildOnly(command.isGuildOnly());
         command.getOptions()
                 .stream()
                 .map(OptionData::fromOption)
@@ -386,7 +392,8 @@ public interface SlashCommandData extends CommandData
         String description = object.getString("description");
         DataArray options = object.optArray("options").orElseGet(DataArray::empty);
         CommandDataImpl command = (CommandDataImpl) new CommandDataImpl(name, description)
-                .setUserPermissionRequired(object.getUnsignedLong("default_member_permissions", Permission.ALL_PERMISSIONS));
+                .setUserPermissionRequired(object.getUnsignedLong("default_member_permissions", Permission.ALL_PERMISSIONS))
+                .setGuildOnly(object.getBoolean("dm_permission"));
         options.stream(DataArray::getObject).forEach(opt ->
         {
             OptionType type = OptionType.fromKey(opt.getInt("type"));

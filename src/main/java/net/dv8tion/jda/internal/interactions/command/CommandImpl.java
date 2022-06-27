@@ -29,7 +29,6 @@ import net.dv8tion.jda.internal.JDAImpl;
 import net.dv8tion.jda.internal.requests.RestActionImpl;
 import net.dv8tion.jda.internal.requests.Route;
 import net.dv8tion.jda.internal.requests.restaction.CommandEditActionImpl;
-import net.dv8tion.jda.internal.utils.Checks;
 
 import javax.annotation.Nonnull;
 import java.util.*;
@@ -51,6 +50,7 @@ public class CommandImpl implements Command
     private final List<Command.SubcommandGroup> groups;
     private final List<Command.Subcommand> subcommands;
     private final long id, guildId, applicationId, version, permissionsUserRequired;
+    private final boolean guildOnly;
     private final Command.Type type;
 
     public CommandImpl(JDAImpl api, Guild guild, DataObject json)
@@ -61,6 +61,7 @@ public class CommandImpl implements Command
         this.description = json.getString("description", "");
         this.type = Command.Type.fromId(json.getInt("type", 1));
         this.id = json.getUnsignedLong("id");
+        this.guildOnly = json.getBoolean("dm_permission");
         this.permissionsUserRequired = json.getUnsignedLong("default_member_permissions", Permission.ALL_PERMISSIONS);
         this.guildId = guild != null ? guild.getIdLong() : 0L;
         this.applicationId = json.getUnsignedLong("application_id", api.getSelfUser().getApplicationIdLong());
@@ -135,6 +136,12 @@ public class CommandImpl implements Command
     public long getUserPermissionRequiredRaw()
     {
         return permissionsUserRequired;
+    }
+
+    @Override
+    public boolean isGuildOnly()
+    {
+        return guildOnly;
     }
 
     @Nonnull

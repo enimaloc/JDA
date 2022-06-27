@@ -135,6 +135,8 @@ public interface Command extends ISnowflake
         return Permission.getPermissions(getUserPermissionRequiredRaw());
     }
 
+    boolean isGuildOnly();
+
     /**
      * The id of the application this command belongs to.
      *

@@ -63,6 +63,11 @@ public interface CommandCreateAction extends RestAction<Command>, SlashCommandDa
     @Nonnull
     @Override
     @CheckReturnValue
+    CommandCreateAction setGuildOnly(boolean guildOnly);
+
+    @Nonnull
+    @Override
+    @CheckReturnValue
     default CommandCreateAction setUserPermissionRequired(Permission... permissions) {
         return setUserPermissionRequired(Permission.getRaw(permissions));
     }
