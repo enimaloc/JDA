@@ -16,6 +16,7 @@
 
 package net.dv8tion.jda.internal.interactions;
 
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
@@ -32,15 +33,17 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.jetbrains.annotations.NotNull;
+
 public class CommandDataImpl implements SlashCommandData
 {
     protected final DataArray options = DataArray.empty();
     protected String name, description = "";
+    protected long permissions = Permission.ALL_PERMISSIONS;
 
     private boolean allowSubcommands = true;
     private boolean allowGroups = true;
     private boolean allowOption = true;
-    private boolean defaultPermissions = true; // whether the command uses default_permissions (blacklist/whitelist)
     private boolean allowRequired = true;
 
     private final Command.Type type;
@@ -71,7 +74,7 @@ public class CommandDataImpl implements SlashCommandData
     public DataObject toData()
     {
         DataObject json = DataObject.empty()
-                .put("default_permission", defaultPermissions)
+                .put("default_member_permissions", permissions)
                 .put("type", type.getId())
                 .put("name", name)
                 .put("options", options);
@@ -115,18 +118,18 @@ public class CommandDataImpl implements SlashCommandData
                 .collect(Collectors.toList());
     }
 
-    @Nonnull
+    @NotNull
     @Override
-    public CommandDataImpl setDefaultEnabled(boolean enabled)
+    public SlashCommandData setUserPermissionRequired(long rawPermissions)
     {
-        this.defaultPermissions = enabled;
+        this.permissions = rawPermissions;
         return this;
     }
 
     @Override
-    public boolean isDefaultEnabled()
+    public long getUserPermissionRequiredRaw()
     {
-        return defaultPermissions;
+        return permissions;
     }
 
     @Nonnull

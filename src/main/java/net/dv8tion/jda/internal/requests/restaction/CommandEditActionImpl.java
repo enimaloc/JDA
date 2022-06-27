@@ -33,6 +33,7 @@ import net.dv8tion.jda.internal.requests.RestActionImpl;
 import net.dv8tion.jda.internal.requests.Route;
 import net.dv8tion.jda.internal.utils.Checks;
 import okhttp3.RequestBody;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -42,9 +43,11 @@ import java.util.function.BooleanSupplier;
 public class CommandEditActionImpl extends RestActionImpl<Command> implements CommandEditAction
 {
     private static final String UNDEFINED = "undefined";
-    private static final int NAME_SET        = 1 << 0;
+    private static final int NAME_SET = 1 << 0;
     private static final int DESCRIPTION_SET = 1 << 1;
-    private static final int OPTIONS_SET     = 1 << 2;
+    private static final int OPTIONS_SET = 1 << 2;
+    private static final int PERMISSIONS_SET = 1 << 3;
+
     private final Guild guild;
     private int mask = 0;
     private CommandDataImpl data = new CommandDataImpl(UNDEFINED, UNDEFINED);
@@ -80,16 +83,17 @@ public class CommandEditActionImpl extends RestActionImpl<Command> implements Co
     public CommandEditAction apply(@Nonnull CommandData commandData)
     {
         Checks.notNull(commandData, "Command Data");
-        this.mask = NAME_SET | DESCRIPTION_SET | OPTIONS_SET;
+        this.mask = NAME_SET | DESCRIPTION_SET | OPTIONS_SET | PERMISSIONS_SET;
         this.data = (CommandDataImpl) commandData;
         return this;
     }
 
-    @Nonnull
+    @NotNull
     @Override
-    public CommandEditAction setDefaultEnabled(boolean enabled)
+    public CommandEditAction setUserPermissionRequired(long rawPermissions)
     {
-        data.setDefaultEnabled(enabled);
+        data.setUserPermissionRequired(rawPermissions);
+        mask |= PERMISSIONS_SET;
         return this;
     }
 
@@ -186,6 +190,8 @@ public class CommandEditActionImpl extends RestActionImpl<Command> implements Co
             json.remove("description");
         if (isUnchanged(OPTIONS_SET))
             json.remove("options");
+        if (isUnchanged(PERMISSIONS_SET))
+            json.remove("default_member_permissions");
         mask = 0;
         data = new CommandDataImpl(UNDEFINED, UNDEFINED);
         return getRequestBody(json);

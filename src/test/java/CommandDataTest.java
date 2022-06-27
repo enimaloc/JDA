@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -29,13 +30,15 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.LoggerFactory;
+
 public class CommandDataTest
 {
     @Test
     public void testNormal()
     {
         CommandData command = new CommandDataImpl("ban", "Ban a user from this server")
-                .setDefaultEnabled(false)
+                .setUserPermissionRequired(Permission.BAN_MEMBERS)
                 .addOption(OptionType.USER, "user", "The user to ban", true) // required before non-required
                 .addOption(OptionType.STRING, "reason", "The ban reason") // test that default is false
                 .addOption(OptionType.INTEGER, "days", "The duration of the ban", false); // test with explicit false
@@ -66,8 +69,8 @@ public class CommandDataTest
     @Test
     public void testSubcommand()
     {
-        CommandDataImpl command = new CommandDataImpl("mod", "Moderation commands")
-                .setDefaultEnabled(true)
+        CommandDataImpl command = (CommandDataImpl) new CommandDataImpl("mod", "Moderation commands")
+                .setUserPermissionRequired(Permission.BAN_MEMBERS)
                 .addSubcommands(new SubcommandData("ban", "Ban a user from this server")
                     .addOption(OptionType.USER, "user", "The user to ban", true) // required before non-required
                     .addOption(OptionType.STRING, "reason", "The ban reason") // test that default is false
@@ -76,7 +79,7 @@ public class CommandDataTest
         DataObject data = command.toData();
         Assertions.assertEquals("mod", data.getString("name"));
         Assertions.assertEquals("Moderation commands", data.getString("description"));
-        Assertions.assertTrue(data.getBoolean("default_permission"));
+        Assertions.assertEquals(data.getUnsignedLong("default_member_permissions", Permission.ALL_PERMISSIONS), Permission.BAN_MEMBERS.getRawValue());
 
         DataObject subdata = data.getArray("options").getObject(0);
         Assertions.assertEquals("ban", subdata.getString("name"));
@@ -103,7 +106,8 @@ public class CommandDataTest
     @Test
     public void testSubcommandGroup()
     {
-        CommandDataImpl command = new CommandDataImpl("mod", "Moderation commands")
+        CommandDataImpl command = (CommandDataImpl) new CommandDataImpl("mod", "Moderation commands")
+                .setUserPermissionRequired(Permission.BAN_MEMBERS)
                 .addSubcommandGroups(new SubcommandGroupData("ban", "Ban or unban a user from this server")
                     .addSubcommands(new SubcommandData("add", "Ban a user from this server")
                         .addOption(OptionType.USER, "user", "The user to ban", true) // required before non-required
@@ -113,7 +117,7 @@ public class CommandDataTest
         DataObject data = command.toData();
         Assertions.assertEquals("mod", data.getString("name"));
         Assertions.assertEquals("Moderation commands", data.getString("description"));
-        Assertions.assertTrue(data.getBoolean("default_permission"));
+        Assertions.assertEquals(data.getUnsignedLong("default_member_permissions", Permission.ALL_PERMISSIONS), Permission.BAN_MEMBERS.getRawValue());
 
         DataObject group = data.getArray("options").getObject(0);
         Assertions.assertEquals("ban", group.getString("name"));

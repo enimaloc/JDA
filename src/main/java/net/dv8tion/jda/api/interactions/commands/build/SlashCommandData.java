@@ -16,14 +16,17 @@
 
 package net.dv8tion.jda.api.interactions.commands.build;
 
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.requests.restaction.CommandCreateAction;
 import net.dv8tion.jda.api.utils.data.DataArray;
 import net.dv8tion.jda.api.utils.data.DataObject;
 import net.dv8tion.jda.internal.interactions.CommandDataImpl;
 import net.dv8tion.jda.internal.utils.Checks;
 
+import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.List;
@@ -39,7 +42,13 @@ public interface SlashCommandData extends CommandData
 
     @Nonnull
     @Override
-    SlashCommandData setDefaultEnabled(boolean enabled);
+    SlashCommandData setUserPermissionRequired(long rawPermissions);
+
+    @Nonnull
+    @Override
+    default SlashCommandData setUserPermissionRequired(Permission... permissions) {
+        return setUserPermissionRequired(Permission.getRaw(permissions));
+    }
 
     /**
      * Configure the description
@@ -332,7 +341,7 @@ public interface SlashCommandData extends CommandData
             throw new IllegalArgumentException("Cannot convert command of type " + command.getType() + " to SlashCommandData!");
 
         CommandDataImpl data = new CommandDataImpl(command.getName(), command.getDescription());
-        data.setDefaultEnabled(command.isDefaultEnabled());
+        data.setUserPermissionRequired(command.getUserPermissionRequiredRaw());
         command.getOptions()
                 .stream()
                 .map(OptionData::fromOption)
@@ -376,7 +385,8 @@ public interface SlashCommandData extends CommandData
 
         String description = object.getString("description");
         DataArray options = object.optArray("options").orElseGet(DataArray::empty);
-        CommandDataImpl command = new CommandDataImpl(name, description);
+        CommandDataImpl command = (CommandDataImpl) new CommandDataImpl(name, description)
+                .setUserPermissionRequired(object.getUnsignedLong("default_member_permissions", Permission.ALL_PERMISSIONS));
         options.stream(DataArray::getObject).forEach(opt ->
         {
             OptionType type = OptionType.fromKey(opt.getInt("type"));

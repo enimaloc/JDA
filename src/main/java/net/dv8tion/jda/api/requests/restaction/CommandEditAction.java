@@ -16,6 +16,7 @@
 
 package net.dv8tion.jda.api.requests.restaction;
 
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.*;
@@ -72,18 +73,15 @@ public interface CommandEditAction extends RestAction<Command>
     @CheckReturnValue
     CommandEditAction apply(@Nonnull CommandData commandData);
 
-    /**
-     * Whether this command is available to everyone by default.
-     * <br>If this is disabled, you need to explicitly whitelist users and roles per guild.
-     *
-     * @param  enabled
-     *         True, if this command is enabled by default for everyone. (Default: true)
-     *
-     * @return The CommandEditAction instance, for chaining
-     */
     @Nonnull
     @CheckReturnValue
-    CommandEditAction setDefaultEnabled(boolean enabled);
+    CommandEditAction setUserPermissionRequired(long rawPermissions);
+
+    @Nonnull
+    @CheckReturnValue
+    default CommandEditAction setUserPermissionRequired(Permission... permissions) {
+        return setUserPermissionRequired(Permission.getRaw(permissions));
+    }
 
     /**
      * Configure the name

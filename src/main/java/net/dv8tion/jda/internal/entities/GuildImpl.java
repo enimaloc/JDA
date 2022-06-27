@@ -34,7 +34,6 @@ import net.dv8tion.jda.api.exceptions.ParsingException;
 import net.dv8tion.jda.api.exceptions.PermissionException;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
-import net.dv8tion.jda.api.interactions.commands.privileges.CommandPrivilege;
 import net.dv8tion.jda.api.managers.AudioManager;
 import net.dv8tion.jda.api.managers.GuildManager;
 import net.dv8tion.jda.api.managers.GuildStickerManager;
@@ -268,90 +267,6 @@ public class GuildImpl implements Guild
         Checks.isSnowflake(commandId);
         Route.CompiledRoute route = Route.Interactions.DELETE_GUILD_COMMAND.compile(getJDA().getSelfUser().getApplicationId(), getId(), commandId);
         return new RestActionImpl<>(getJDA(), route);
-    }
-
-    @Nonnull
-    @Override
-    public RestAction<List<CommandPrivilege>> retrieveCommandPrivilegesById(@Nonnull String commandId)
-    {
-        Checks.isSnowflake(commandId, "ID");
-        Route.CompiledRoute route = Route.Interactions.GET_COMMAND_PERMISSIONS.compile(getJDA().getSelfUser().getApplicationId(), getId(), commandId);
-        return new RestActionImpl<>(getJDA(), route, (response, request) -> parsePrivilegesList(response.getObject()));
-    }
-
-    @Nonnull
-    @Override
-    public RestAction<Map<String, List<CommandPrivilege>>> retrieveCommandPrivileges()
-    {
-        Route.CompiledRoute route = Route.Interactions.GET_ALL_COMMAND_PERMISSIONS.compile(getJDA().getSelfUser().getApplicationId(), getId());
-        return new RestActionImpl<>(getJDA(), route, (response, request) -> {
-            Map<String, List<CommandPrivilege>> privileges = new HashMap<>();
-            response.getArray().stream(DataArray::getObject).forEach(obj -> {
-                String id = obj.getString("id");
-                List<CommandPrivilege> list = parsePrivilegesList(obj);
-                privileges.put(id, list);
-            });
-            return privileges;
-        });
-    }
-
-    @Nonnull
-    @Override
-    public RestAction<List<CommandPrivilege>> updateCommandPrivilegesById(@Nonnull String id, @Nonnull Collection<? extends CommandPrivilege> privileges)
-    {
-        Checks.isSnowflake(id, "ID");
-        Checks.noneNull(privileges, "Privileges");
-        Checks.check(privileges.size() <= 10, "Cannot have more than 10 privileges for a command!");
-        Route.CompiledRoute route = Route.Interactions.EDIT_COMMAND_PERMISSIONS.compile(getJDA().getSelfUser().getApplicationId(), getId(), id);
-        DataArray array = DataArray.fromCollection(privileges);
-        return new RestActionImpl<>(getJDA(), route, DataObject.empty().put("permissions", array),
-            (response, request) -> parsePrivilegesList(response.getObject()));
-    }
-
-    @Nonnull
-    @Override
-    @SuppressWarnings("deprecation")
-    public RestAction<Map<String, List<CommandPrivilege>>> updateCommandPrivileges(@Nonnull Map<String, ? extends Collection<CommandPrivilege>> privileges)
-    {
-        Checks.notNull(privileges, "Privileges");
-        privileges.forEach((key, value) -> {
-            Checks.isSnowflake(key, "Map Key");
-            Checks.noneNull(value, "Privilege List for Command");
-            Checks.check(value.size() <= 10, "Cannot have more than 10 privileges for a command!");
-        });
-        DataArray array = DataArray.empty();
-        privileges.forEach((commandId, list) -> {
-            DataObject entry = DataObject.empty();
-            entry.put("id", commandId);
-            entry.put("permissions", DataArray.fromCollection(list));
-            array.add(entry);
-        });
-
-        Route.CompiledRoute route = Route.Interactions.EDIT_ALL_COMMAND_PERMISSIONS.compile(getJDA().getSelfUser().getApplicationId(), getId());
-        return new RestActionImpl<>(getJDA(), route, RequestBody.create(Requester.MEDIA_TYPE_JSON, array.toJson()), (response, request) -> {
-            Map<String, List<CommandPrivilege>> map = new HashMap<>();
-            response.getArray().stream(DataArray::getObject).forEach(obj -> {
-                String id = obj.getString("id");
-                List<CommandPrivilege> list = parsePrivilegesList(obj);
-                map.put(id, list);
-            });
-            return map;
-        });
-    }
-
-    private List<CommandPrivilege> parsePrivilegesList(DataObject obj)
-    {
-        return obj.getArray("permissions")
-                .stream(DataArray::getObject)
-                .map(this::parsePrivilege)
-                .collect(Collectors.toList());
-    }
-
-    private CommandPrivilege parsePrivilege(DataObject data)
-    {
-        CommandPrivilege.Type type = CommandPrivilege.Type.fromKey(data.getInt("type", 1));
-        boolean enabled = data.getBoolean("permission");
-        return new CommandPrivilege(type, enabled, data.getUnsignedLong("id"));
     }
 
     @Nonnull

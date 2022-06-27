@@ -31,6 +31,7 @@ import net.dv8tion.jda.internal.requests.RestActionImpl;
 import net.dv8tion.jda.internal.requests.Route;
 import net.dv8tion.jda.internal.utils.Checks;
 import okhttp3.RequestBody;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -77,11 +78,11 @@ public class CommandCreateActionImpl extends RestActionImpl<Command> implements 
         return (CommandCreateAction) super.deadline(timestamp);
     }
 
-    @Nonnull
+    @NotNull
     @Override
-    public CommandCreateAction setDefaultEnabled(boolean enabled)
+    public CommandCreateAction setUserPermissionRequired(long rawPermissions)
     {
-        data.setDefaultEnabled(enabled);
+        data.setUserPermissionRequired(rawPermissions);
         return this;
     }
 
@@ -93,9 +94,9 @@ public class CommandCreateActionImpl extends RestActionImpl<Command> implements 
     }
 
     @Override
-    public boolean isDefaultEnabled()
+    public long getUserPermissionRequiredRaw()
     {
-        return data.isDefaultEnabled();
+        return data.getUserPermissionRequiredRaw();
     }
 
     @Nonnull
